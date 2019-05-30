@@ -1,7 +1,7 @@
 [![Version](https://badge.fury.io/py/mcdapi.svg)](https://pypi.org/project/mcdapi/)
-![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/giacomoferretti/mcdapi.svg?color=blue&label=Stable)
-![GitHub tag (latest SemVer pre-release)](https://img.shields.io/github/tag-pre/giacomoferretti/mcdapi.svg?label=Testing)
-[![GitHub license](https://img.shields.io/github/license/giacomoferretti/mcdapi-telegram-bot.svg?color=informational)](https://github.com/giacomoferretti/McDonaldsApi/blob/master/LICENSE)
+![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/giacomoferretti/mcdapi-telegram-bot.svg?color=blue&label=Stable)
+![GitHub tag (latest SemVer pre-release)](https://img.shields.io/github/tag-pre/giacomoferretti/mcdapi-telegram-bot.svg?label=Testing)
+[![GitHub license](https://img.shields.io/github/license/giacomoferretti/mcdapi-telegram-bot.svg?color=informational)](https://github.com/giacomoferretti/mcdapi-telegram-bot/blob/master/LICENSE)
 
 # mcdapi-telegram-bot
 `mcdapi-telegram-bot` is a simple bot written in Python that can generate valid coupons and promocodes that you can use at McDonald's.
