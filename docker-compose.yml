@@ -1,0 +1,33 @@
+version: "3.7"
+
+services:
+  torproxy:
+    image: torproxy
+    build:
+      context: .
+      dockerfile: .docker/torproxy-Dockerfile
+      args:
+        socks_port: "9050"
+        control_password: "INSERT_PASSWORD_HERE"
+        control_port: "9051"
+    networks:
+      - main
+  mcdapibot:
+    image: mcdapibot
+    build:
+      context: .
+      dockerfile: .docker/mcdapibot-Dockerfile
+    networks:
+      - main
+    volumes:
+      - "./logs:/app/logs"
+      - "./templates:/app/templates"
+      - "./config.json:/app/config.json"
+      - "./users.json:/app/users.json"
+      - "./offers.json:/app/offers.json"
+    depends_on:
+      - torproxy
+    restart: always
+
+networks:
+  main:

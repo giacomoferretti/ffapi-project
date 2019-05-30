@@ -1,0 +1,30 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
+# Environments
+venv/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# IntelliJ
+.idea/
+
+# Docker files
+docker-compose.yml
+.docker
+
+# Git
+.git
+
+# GitHub
+.github
+
+# Custom
+config.json
+users.json
+offers.json
+templates/
+logs/

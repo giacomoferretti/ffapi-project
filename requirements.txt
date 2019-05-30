@@ -1,0 +1,12 @@
+# Main
+mcdapi
+
+# Telegram
+python-telegram-bot==12.0.0b1
+
+# QR Codes
+qrcode
+Pillow
+
+# HTTP
+requests[socks]

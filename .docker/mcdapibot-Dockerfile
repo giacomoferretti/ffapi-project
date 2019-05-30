@@ -1,0 +1,33 @@
+# Grab latest Apline Linux
+FROM alpine:latest
+
+# Install Python3 and Tor
+RUN apk update && apk add python3-dev
+
+RUN apk add gcc
+
+# Fix for timezone
+RUN apk add tzdata
+RUN cp /usr/share/zoneinfo/Europe/Rome /etc/localtime
+
+# Needed for cryptography
+RUN apk add musl-dev
+RUN apk add libffi-dev
+RUN apk add openssl-dev
+
+# Needed for Pillow
+RUN apk add libjpeg-turbo-dev
+RUN apk add zlib-dev
+
+RUN rm -rf /var/cache/apk/*
+
+COPY docker-requirements.1 /
+COPY docker-requirements.2 /
+
+RUN pip3 install -r /docker-requirements.1
+RUN pip3 install -r /docker-requirements.2
+
+COPY . /app
+WORKDIR /app
+
+CMD ["python3", "main.py"]

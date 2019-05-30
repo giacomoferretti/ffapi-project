@@ -1,0 +1,9 @@
+{
+  "token": "<INSERT YOUR TOKEN>",
+  "ownerId": 0,
+  "ownerUsername": "[can be empty]",
+  "adminIds": [
+    0
+  ],
+  "templatesFolder": "templates"
+}

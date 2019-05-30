@@ -1,0 +1,32 @@
+# Grab latest Apline Linux
+FROM alpine:latest
+
+# Arguments
+ARG socks_port
+ARG control_password
+ARG control_port
+
+# Install Tor
+RUN apk update && apk add tor --update-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/community/ && rm -rf /var/cache/apk/*
+RUN tor --version
+EXPOSE $socks_port
+# COPY torrc.default /etc/tor/torrc.default
+RUN chown -R tor /etc/tor
+USER tor
+
+# Generate config
+RUN if [ ! -z "$control_password" ] && [ ! -z "$control_port" ]; \
+then echo -e "\n"; \
+echo "SocksPort 0.0.0.0:$socks_port" >> /etc/tor/torrc.default; \
+echo "Your password is: $control_password"; \
+echo "HashedControlPassword $(tor --hash-password "$control_password")" >> /etc/tor/torrc.default; \
+echo "Your port is: $control_port"; \
+echo "ControlPort $control_port" >> /etc/tor/torrc.default; \
+echo -e "\n"; \
+fi
+
+# Read config
+RUN cat /etc/tor/torrc.default
+
+ENTRYPOINT [ "tor" ]
+CMD [ "-f", "/etc/tor/torrc.default" ]

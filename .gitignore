@@ -1,0 +1,21 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
+# Environments
+venv/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# IntelliJ
+.idea/
+
+# Custom
+config.json
+users.json
+offers.json
+logs/
+.docker/mcdapibot
+.docker/torproxy

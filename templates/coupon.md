@@ -1,0 +1,7 @@
+*{}*
+
+{}
+
+Codice Totem: `{}`
+
+ID Offerta: `{}`
