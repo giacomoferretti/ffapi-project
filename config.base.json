@@ -1,9 +1,11 @@
 {
-  "token": "<INSERT YOUR TOKEN>",
+  "token": "token",
   "ownerId": 0,
-  "ownerUsername": "[can be empty]",
+  "ownerUsername": "can_be_empty",
   "adminIds": [
     0
   ],
-  "templatesFolder": "templates"
+  "templatesFolder": "templates",
+  "proxyEnabled": false,
+  "proxyUrl": "socks5://127.0.0.1:8080"
 }
