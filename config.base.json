@@ -7,5 +7,5 @@
   ],
   "templatesFolder": "templates",
   "proxyEnabled": false,
-  "proxyUrl": "socks5://127.0.0.1:8080"
+  "proxyUrl": "socks5://127.0.0.1:9050"
 }
