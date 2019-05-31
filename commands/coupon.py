@@ -22,39 +22,54 @@ import qrcode
 import requests
 from mcdapi import coupon, endpoints
 from telegram import Update, ParseMode, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import CallbackContext
+from telegram.ext import CallbackContext, run_async
 
 from commands import base
-from utils import templates
 
 __offers_file__ = 'offers.json'
 
+__proxy_enabled__ = True
+__proxy_url__ = 'socks5://127.0.0.1:9050'
 
-def generate_coupon(id):
-    # Generate config
+
+def generate_coupon(id_):
+    __logger__ = logging.getLogger(__name__)
+
+    # Get session
+    session = requests.session()
+
+    if __proxy_enabled__:
+        session.proxies = {
+            'http': __proxy_url__,
+            'https': __proxy_url__
+        }
+
+    # Generate
     android_id = coupon.get_random_device_id()
     vmob_uid = coupon.generate_vmob_uid(android_id)
     username = coupon.generate_username(android_id)
     password = coupon.generate_password(android_id)
-    plexurek = coupon.generate_plexure_api_key(vmob_uid)
+    plexure = coupon.generate_plexure_api_key(vmob_uid)
 
-    headers = coupon.strip_unnecessary_headers(coupon.get_random_headers(vmob_uid, plexurek))
+    headers = coupon.strip_unnecessary_headers(coupon.get_random_headers(vmob_uid, plexure))
 
-    r = requests.request(endpoints.DEVICE_REGISTRATION['method'], endpoints.DEVICE_REGISTRATION['url'],
-                         data=endpoints.DEVICE_REGISTRATION['body'].format(username, password), headers=headers)
+    r = session.request(endpoints.DEVICE_REGISTRATION['method'], endpoints.DEVICE_REGISTRATION['url'],
+                        data=endpoints.DEVICE_REGISTRATION['body'].format(username, password), headers=headers)
 
     if r.status_code == 200:
-        # print('Successfully got a token.')
         js = json.loads(r.content)
-        ACCESS_TOKEN = js['access_token']
-        TOKEN_TYPE = js['token_type']
-        # print('TOKEN: ' + ACCESS_TOKEN)
-        headers['Authorization'] = 'bearer {}'.format(ACCESS_TOKEN)
+        token = js['access_token']
+        headers['Authorization'] = 'bearer {}'.format(token)
 
-    r = requests.post(endpoints.REDEEM_OFFER['url'], data=endpoints.REDEEM_OFFER['body'].format(id, id),
-                      headers=headers)
-    js = json.loads(r.content.decode())
-    return js
+    r = session.post(endpoints.REDEEM_OFFER['url'], data=endpoints.REDEEM_OFFER['body'].format(id_, id_),
+                     headers=headers)
+
+    if r.status_code == 200:
+        __logger__.info('Successfully generated the coupon.')
+    else:
+        __logger__.error('There was an error generating the coupon: {}'.format(r.content))
+
+    return json.loads(r.content.decode())
 
 
 class CouponHandler(base.Command):
@@ -68,6 +83,9 @@ class CouponHandler(base.Command):
         keyboard = [
             [
                 InlineKeyboardButton("\U0001F354  Lista coupons", callback_data='{}_list'.format(self.name))
+            ],
+            [
+                InlineKeyboardButton("Source Code", url='https://github.com/giacomoferretti/mcdapi-telegram-bot')
             ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -77,6 +95,7 @@ class CouponHandler(base.Command):
                                reply_markup=reply_markup,
                                caption=body, parse_mode=ParseMode.MARKDOWN)
 
+    @run_async
     def callback(self, update: Update, context: CallbackContext):
         __logger__ = logging.getLogger(__name__)
 
@@ -106,8 +125,12 @@ class CouponHandler(base.Command):
 
             keyboard = []
             for x in offers:
-                keyboard.append([InlineKeyboardButton(x['customTitle'], callback_data='{}_id_{}'.format(self.name,
-                                                                                                        x['id']))])
+                offer_title = x['title']
+                if x['customTitle'] != '':
+                    offer_title = x['customTitle']
+
+                keyboard.append([InlineKeyboardButton(offer_title, callback_data='{}_id_{}'.format(self.name,
+                                                                                                   x['id']))])
             keyboard.append([InlineKeyboardButton("\U0001F519  Menu principale",
                                                   callback_data='{}_homepage_r'.format(self.name))])
             reply_markup = InlineKeyboardMarkup(keyboard)
@@ -116,12 +139,29 @@ class CouponHandler(base.Command):
             context.bot.send_message(chat_id=query.message.chat.id, text="Seleziona un'offerta:",
                                      reply_markup=reply_markup)
 
+        # TODO: Show a preview of the offer
+        elif query.data.startswith('{}_info_id'.format(self.name)):
+            # Edit message
+            query.edit_message_text(text="Riprova più tardi. 5 min.")
+
+            id_ = query.data.split('_')[2]
+
+            # Load offers
+            with open(__offers_file__) as f:
+                offers = json.loads(f.read())
+                offer_index = next((index for (index, d) in enumerate(offers) if d["id"] == id_), None)
+
+            r = requests.request(endpoints.PROMO_IMAGE['method'], endpoints.PROMO_IMAGE['url']
+                                 .format(size=512, path=offers[offer_index]['promoImagePath']))
+
+            print(r.status_code)
+
         elif query.data.startswith('{}_id'.format(self.name)):
             # Edit message
             query.edit_message_text(text="Sto generando l'offerta...")
 
             # Load template
-            body = templates.get_template('coupon.md')
+            body = self.__config__.get_template('coupon.md')
 
             # Generate coupon
             js = generate_coupon(query.data.split('_')[2])
