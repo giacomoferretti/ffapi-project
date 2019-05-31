@@ -65,6 +65,12 @@ class Config:
     def get_templates_folder(self):
         return self.__config__['templatesFolder']
 
+    def is_proxy_enabled(self):
+        return self.__config__['proxyEnabled']
+
+    def get_proxy_url(self):
+        return self.__config__['proxyUrl']
+
     def is_admin(self, id_):
         return id_ == self.__config__['ownerId'] or id_ in self.__config__['adminIds']
 
