@@ -16,6 +16,8 @@
 
 import json
 import logging
+import re
+import socket
 from io import BytesIO
 
 import qrcode
@@ -25,11 +27,9 @@ from telegram import Update, ParseMode, InlineKeyboardButton, InlineKeyboardMark
 from telegram.ext import CallbackContext, run_async
 
 from commands import base
+from utils import config
 
 __offers_file__ = 'offers.json'
-
-__proxy_enabled__ = True
-__proxy_url__ = 'socks5://127.0.0.1:9050'
 
 
 def get_offers():
@@ -37,17 +37,37 @@ def get_offers():
         return json.loads(f.read())
 
 
-def generate_coupon(id_):
+def parse_url(url):
+    p = '(?:.*://)?(?P<host>[^:/ ]+).?(?P<port>[0-9]*).*'
+
+    m = re.search(p, url)
+    return m.group('host'), int(m.group('port'))
+
+
+def is_port_open(url):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.connect(parse_url(url))
+        s.shutdown(2)
+        return True
+    except ConnectionRefusedError:
+        return False
+
+
+def generate_coupon(id_, __config__: config.Config):
     __logger__ = logging.getLogger(__name__)
 
     # Get session
     session = requests.session()
 
-    if __proxy_enabled__:
-        session.proxies = {
-            'http': __proxy_url__,
-            'https': __proxy_url__
-        }
+    if is_port_open(__config__.get_proxy_url()):
+        if __config__.is_proxy_enabled():
+            session.proxies = {
+                'http': __config__.get_proxy_url(),
+                'https': __config__.get_proxy_url()
+            }
+    else:
+        __logger__.warning('Cannot connect to proxy.')
 
     # Generate
     android_id = coupon.get_random_device_id()
@@ -173,7 +193,7 @@ class CouponHandler(base.Command):
             body = self.__config__.get_template('coupon.md')
 
             # Generate coupon
-            js = generate_coupon(query.data.split('_')[2])
+            js = generate_coupon(query.data.split('_')[2], self.__config__)
             code = js['redemptionText']
 
             # Generate QR code
