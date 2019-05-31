@@ -32,6 +32,11 @@ __proxy_enabled__ = True
 __proxy_url__ = 'socks5://127.0.0.1:9050'
 
 
+def get_offers():
+    with open(__offers_file__) as f:
+        return json.loads(f.read())
+
+
 def generate_coupon(id_):
     __logger__ = logging.getLogger(__name__)
 
@@ -75,9 +80,12 @@ def generate_coupon(id_):
 class CouponHandler(base.Command):
     name = 'coupon'
 
+    @run_async
     def home(self, update: Update, context: CallbackContext):
+        offers = get_offers()
+
         body = self.__config__.get_template('home.md').format(name=update.effective_user['first_name'],
-                                                              id=update.effective_user['id'], coupons='19')
+                                                              id=update.effective_user['id'], coupons=len(offers))
 
         # Create inline keyboard
         keyboard = [
@@ -115,13 +123,14 @@ class CouponHandler(base.Command):
                                                       reply_markup=None)
 
         elif self.check_callback(query.data, 'list'):
+            context.bot.answer_callback_query(callback_query_id=query.id, text='')
+
             # Delete calling message
             context.bot.delete_message(chat_id=query.message.chat.id, message_id=query.message.message_id)
 
             # Populate keyboard
             # Load offers
-            with open(__offers_file__) as f:
-                offers = json.loads(f.read())
+            offers = get_offers()
 
             keyboard = []
             for x in offers:
