@@ -18,6 +18,8 @@ import os
 import sys
 from logging.handlers import TimedRotatingFileHandler
 
+from telegram.ext import run_async
+
 
 class InfoFilter(logging.Filter):
     def filter(self, rec):
@@ -67,11 +69,13 @@ def init():
     __logger__ = logging.getLogger(__name__)
 
 
+@run_async
 def log_message(update, context):
     __logger__.info('[{}] {}: {}'.format(update.effective_user['id'], update.effective_user['first_name'],
                                          update.message.text))
 
 
+@run_async
 def log_callback(update, context):
     __logger__.info('[{}] {} => {}'.format(update.callback_query['message']['chat']['id'],
                                            update.callback_query['message']['chat']['first_name'],
