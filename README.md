@@ -19,6 +19,8 @@ ownerId: Your Telegram ID (Not necessary)
 ownerUsername: Your Telegram username (Not necessary)
 adminIds: [id, ...] (Not necessary)
 templatesFolder: The name of the folder containing the templates
+proxyEnabled: Enables and disables generating coupons through a proxy
+proxyUrl: URL of the proxy, if enabled
 ```
 
 ## Running the bot
