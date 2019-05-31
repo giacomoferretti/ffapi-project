@@ -19,7 +19,6 @@ from telegram import Update, ParseMode
 from telegram.ext import CallbackContext
 
 from commands import base
-from utils import templates
 
 
 class PromoCommand(base.Command):
@@ -27,5 +26,5 @@ class PromoCommand(base.Command):
 
     def handler(self, update: Update, context: CallbackContext):
         if self.can_run(update, context):
-            body = templates.get_template('promo.md').format(promo.generate_random_promocode())
+            body = self.__config__.get_template('promo.md').format(promo.generate_random_promocode())
             context.bot.send_message(chat_id=update.effective_chat.id, text=body, parse_mode=ParseMode.MARKDOWN)
