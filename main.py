@@ -22,11 +22,11 @@ from telegram import Update
 from telegram.ext import Updater, CommandHandler, MessageHandler, \
     Filters, CallbackContext, CallbackQueryHandler
 
-from commands import promo, coupon
+from commands import promo, coupon, admin
 from utils import config, users, logger
 
 __major__ = 0
-__minor__ = 1
+__minor__ = 2
 __patch__ = 0
 __metadata__ = ''
 __version__ = '{}.{}.{}{}'.format(__major__, __minor__, __patch__, __metadata__)
@@ -49,15 +49,6 @@ def error(update: Update, context: CallbackContext):
     traceback.print_exc()
 
 
-# TODO: Remove this, not used
-def start(update: Update, context: CallbackContext):
-    __users__.add_user(update.effective_user.to_dict())
-
-    with open(os.path.join('templates', 'home.html')) as f:
-        body = f.read()
-        context.bot.send_message(chat_id=update.effective_chat.id, text=body)
-
-
 def main():
     updater = Updater(__config__.get_token(), use_context=True)
 
@@ -66,7 +57,7 @@ def main():
     updater.dispatcher.add_handler(CallbackQueryHandler(logger.log_callback), group=1)
 
     # Commands
-    # __admin = admin.AdminManager(__config__, __users__)
+    __admin = admin.AdminManager(__config__, __users__)
     __promo = promo.PromoCommand(__config__)
     __coupon = coupon.CouponHandler(__config__)
 
@@ -75,11 +66,12 @@ def main():
 
     # updater.dispatcher.add_handler(CommandHandler('admin', __admin.admin_handler))
     # updater.dispatcher.add_handler(CommandHandler('maintenance', __admin.maintenance_handler))
-    # updater.dispatcher.add_handler(CommandHandler('promo', __promo.handler))
+    updater.dispatcher.add_handler(CommandHandler('promo', __promo.handler))
 
-    # updater.dispatcher.add_handler(CommandHandler('broadcast', __admin.broadcast))
-    # updater.dispatcher.add_handler(CommandHandler('send', __admin.send_message))
-    # updater.dispatcher.add_handler(MessageHandler(Filters.reply, __admin.send_broadcast))
+    updater.dispatcher.add_handler(CommandHandler('broadcast', __admin.broadcast))
+    updater.dispatcher.add_handler(MessageHandler(Filters.reply, __admin.send_broadcast))
+
+    updater.dispatcher.add_handler(CommandHandler('send', __admin.send_message))
     # updater.dispatcher.add_handler(CallbackQueryHandler(keyboard_handler))
 
     # Error handler
