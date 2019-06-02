@@ -1,3 +1,4 @@
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/72f3eec1c1a3426d82c979397577e8ac)](https://app.codacy.com/app/giacomoferretti/mcdapi-telegram-bot?utm_source=github.com&utm_medium=referral&utm_content=giacomoferretti/mcdapi-telegram-bot&utm_campaign=Badge_Grade_Dashboard)
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/giacomoferretti/mcdapi-telegram-bot.svg?color=blue&label=Stable)
 ![GitHub tag (latest SemVer pre-release)](https://img.shields.io/github/tag-pre/giacomoferretti/mcdapi-telegram-bot.svg?label=Testing)
 [![GitHub license](https://img.shields.io/github/license/giacomoferretti/mcdapi-telegram-bot.svg?color=informational)](https://github.com/giacomoferretti/mcdapi-telegram-bot/blob/master/LICENSE)
