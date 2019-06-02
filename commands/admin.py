@@ -65,8 +65,6 @@ class AdminManager(base.Command):
     @run_async
     def send_message(self, update: Update, context: CallbackContext):
         if self.can_run(update, context):
-            __logger__ = logging.getLogger(__name__)
-
             args = update.message.text.split(' ', 2)
 
             if len(args) == 1:

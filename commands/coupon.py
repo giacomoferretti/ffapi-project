@@ -163,8 +163,6 @@ class CouponHandler(base.Command):
 
     @run_async
     def callback(self, update: Update, context: CallbackContext):
-        __logger__ = logging.getLogger(__name__)
-
         query = update.callback_query
 
         if query.data.startswith('{}_homepage'.format(self.name)):

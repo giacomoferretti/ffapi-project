@@ -33,8 +33,6 @@ class PromoCommand(base.Command):
 
     @run_async
     def callback_handler(self, update: Update, context: CallbackContext):
-        __logger__ = logging.getLogger(__name__)
-
         query = update.callback_query
 
         if self.check_callback(query.data, 'generate'):
