@@ -30,6 +30,7 @@ You can run the bot using one of these three methods
 Simply run `docker-compose up`
 
 ### Docker
+Estimated build time: 10 minutes
 ```bash
 docker build . -t torproxy -f .docker/torproxy-Dockerfile --build-arg socks_port=9050 --build-arg control_password="password" --build-arg control_port=9051
 docker build . -t mcdapibot -f .docker/mcdapibot-Dockerfile
