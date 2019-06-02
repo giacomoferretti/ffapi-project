@@ -15,6 +15,7 @@
 #  limitations under the License.
 
 import logging
+import traceback
 
 from telegram import Update, ParseMode
 from telegram.error import Unauthorized, BadRequest
@@ -45,16 +46,17 @@ class AdminManager(base.Command):
 
             if update.to_dict()['message']['reply_to_message']['text'] == __broadcast_message__ and \
                     update.to_dict()['message']['reply_to_message']['from']['id'] == context.bot.id:
-                body = self.__config__.get_template('broadcast.md').format(message=update.message.text,
-                                                                           name=update.effective_user['username'],
-                                                                           id=update.effective_user['id'])
+                body = self.__config__.get_template('broadcast.html').format(message=update.message.text,
+                                                                             name=update.effective_user['username'],
+                                                                             id=update.effective_user['id'])
 
                 for user in list(self.__users__.get_users()):
                     try:
-                        context.bot.send_message(chat_id=user, text=body, parse_mode=ParseMode.MARKDOWN)
+                        context.bot.send_message(chat_id=user, text=body, parse_mode=ParseMode.HTML)
                     except (Unauthorized, BadRequest):
                         __logger__.error('Cannot send message to {}. Removing it from list...'.format(user))
                         self.__users__.remove_user(user)
+                        traceback.print_exc()
 
                 context.bot.send_message(chat_id=update.message.chat.id, message_id=update.message.message_id,
                                          text='The message was sent to {} users.'
