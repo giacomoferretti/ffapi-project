@@ -54,20 +54,9 @@ def is_port_open(url):
         return False
 
 
-def generate_coupon(id_, __config__: config.Config):
-    __logger__ = logging.getLogger(__name__)
-
+def get_headers(config_):
     # Get session
-    session = requests.session()
-
-    if is_port_open(__config__.get_proxy_url()):
-        if __config__.is_proxy_enabled():
-            session.proxies = {
-                'http': __config__.get_proxy_url(),
-                'https': __config__.get_proxy_url()
-            }
-    else:
-        __logger__.warning('Cannot connect to proxy.')
+    session = get_session(config_)
 
     # Generate
     android_id = coupon.get_random_device_id()
@@ -79,14 +68,60 @@ def generate_coupon(id_, __config__: config.Config):
     headers = coupon.strip_unnecessary_headers(coupon.get_random_headers(vmob_uid, plexure))
 
     r = session.request(endpoints.DEVICE_REGISTRATION['method'], endpoints.DEVICE_REGISTRATION['url'],
-                        data=endpoints.DEVICE_REGISTRATION['body'].format(username, password), headers=headers)
+                        data=endpoints.DEVICE_REGISTRATION['body'].format(username=username, password=password),
+                        headers=headers)
 
     if r.status_code == 200:
         js = json.loads(r.content)
         token = js['access_token']
         headers['Authorization'] = 'bearer {}'.format(token)
 
-    r = session.post(endpoints.REDEEM_OFFER['url'], data=endpoints.REDEEM_OFFER['body'].format(id_, id_),
+    return headers
+
+
+def get_session(config_):
+    __logger__ = logging.getLogger(__name__)
+
+    # Get session
+    session = requests.session()
+
+    if is_port_open(config_.get_proxy_url()):
+        if config_.is_proxy_enabled():
+            session.proxies = {
+                'http': config_.get_proxy_url(),
+                'https': config_.get_proxy_url()
+            }
+    else:
+        __logger__.warning('Cannot connect to proxy.')
+
+    return session
+
+
+def generate_coupon(id_, __config__: config.Config):
+    __logger__ = logging.getLogger(__name__)
+
+    # Get session
+    session = get_session(__config__)
+
+    # Generate
+    android_id = coupon.get_random_device_id()
+    vmob_uid = coupon.generate_vmob_uid(android_id)
+    username = coupon.generate_username(android_id)
+    password = coupon.generate_password(android_id)
+    plexure = coupon.generate_plexure_api_key(vmob_uid)
+
+    headers = coupon.strip_unnecessary_headers(coupon.get_random_headers(vmob_uid, plexure))
+
+    r = session.request(endpoints.DEVICE_REGISTRATION['method'], endpoints.DEVICE_REGISTRATION['url'],
+                        data=endpoints.DEVICE_REGISTRATION['body'].format(username=username, password=password),
+                        headers=headers)
+
+    if r.status_code == 200:
+        js = json.loads(r.content)
+        token = js['access_token']
+        headers['Authorization'] = 'bearer {}'.format(token)
+
+    r = session.post(endpoints.REDEEM_OFFER['url'], data=endpoints.REDEEM_OFFER['body'].format(id=id_),
                      headers=headers)
 
     if r.status_code == 200:
@@ -104,13 +139,16 @@ class CouponHandler(base.Command):
     def home(self, update: Update, context: CallbackContext):
         offers = get_offers()
 
-        body = self.__config__.get_template('home.md').format(name=update.effective_user['first_name'],
-                                                              id=update.effective_user['id'], coupons=len(offers))
+        body = self.__config__.get_template('home.html')\
+            .format(name=update.effective_user['first_name'], id=update.effective_user['id'], coupons=len(offers))
 
         # Create inline keyboard
         keyboard = [
             [
                 InlineKeyboardButton("\U0001F354  Lista coupons", callback_data='{}_list'.format(self.name))
+            ],
+            [
+                InlineKeyboardButton("Genera Promocode", callback_data='promo_generate')
             ],
             [
                 InlineKeyboardButton("Source Code", url='https://github.com/giacomoferretti/mcdapi-telegram-bot')
@@ -121,7 +159,7 @@ class CouponHandler(base.Command):
         # Send message
         context.bot.send_photo(chat_id=update.effective_chat.id, photo=open('header.png', 'rb'),
                                reply_markup=reply_markup,
-                               caption=body, parse_mode=ParseMode.MARKDOWN)
+                               caption=body, parse_mode=ParseMode.HTML)
 
     @run_async
     def callback(self, update: Update, context: CallbackContext):
@@ -143,8 +181,6 @@ class CouponHandler(base.Command):
                                                       reply_markup=None)
 
         elif self.check_callback(query.data, 'list'):
-            context.bot.answer_callback_query(callback_query_id=query.id, text='')
-
             # Delete calling message
             context.bot.delete_message(chat_id=query.message.chat.id, message_id=query.message.message_id)
 
@@ -158,7 +194,7 @@ class CouponHandler(base.Command):
                 if x['customTitle'] != '':
                     offer_title = x['customTitle']
 
-                keyboard.append([InlineKeyboardButton(offer_title, callback_data='{}_id_{}'.format(self.name,
+                keyboard.append([InlineKeyboardButton(offer_title, callback_data='{}_info_id_{}'.format(self.name,
                                                                                                    x['id']))])
             keyboard.append([InlineKeyboardButton("\U0001F519  Menu principale",
                                                   callback_data='{}_homepage_r'.format(self.name))])
@@ -168,29 +204,51 @@ class CouponHandler(base.Command):
             context.bot.send_message(chat_id=query.message.chat.id, text="Seleziona un'offerta:",
                                      reply_markup=reply_markup)
 
-        # TODO: Show a preview of the offer
         elif query.data.startswith('{}_info_id'.format(self.name)):
-            # Edit message
-            query.edit_message_text(text="Riprova più tardi. 5 min.")
+            # Answer callback
+            context.bot.answer_callback_query(query.id, text='Sto caricando l\'offerta...')
 
-            id_ = query.data.split('_')[2]
+            # Get session
+            session = get_session(self.__config__)
+
+            # Edit message
+            context.bot.delete_message(chat_id=query.message.chat.id, message_id=query.message.message_id)
+
+            id_ = query.data.split('_')[3]
 
             # Load offers
             with open(__offers_file__) as f:
                 offers = json.loads(f.read())
-                offer_index = next((index for (index, d) in enumerate(offers) if d["id"] == id_), None)
+                offer_index = next((index for (index, d) in enumerate(offers) if d['id'] == int(id_)), None)
 
-            r = requests.request(endpoints.PROMO_IMAGE['method'], endpoints.PROMO_IMAGE['url']
-                                 .format(size=512, path=offers[offer_index]['promoImagePath']))
+            params = endpoints.PROMO_IMAGE['params']
+            params['path'] = offers[offer_index]['promoImagePath']
+            params['imageFormat'] = 'png'
+            r = session.request(endpoints.PROMO_IMAGE['method'], endpoints.PROMO_IMAGE['url'].format(size=512),
+                                params=params)
 
-            print(r.status_code)
+            if r.status_code == 200:
+                # Create inline keyboard
+                keyboard = [
+                    [
+                        InlineKeyboardButton('Va bene', callback_data='{}_id_{}'.format(self.name, id_)),
+                        InlineKeyboardButton('Torna indietro', callback_data='{}_list'.format(self.name))
+                    ]
+                ]
+                reply_markup = InlineKeyboardMarkup(keyboard)
+
+                body = self.__config__.get_template('coupon_preview.html')\
+                    .format(title=offers[offer_index]['title'],  description=offers[offer_index]['description'])
+
+                context.bot.send_photo(chat_id=query.message.chat.id, photo=BytesIO(r.content), caption=body,
+                                       parse_mode=ParseMode.HTML, reply_markup=reply_markup)
 
         elif query.data.startswith('{}_id'.format(self.name)):
             # Edit message
-            query.edit_message_text(text="Sto generando l'offerta...")
+            context.bot.answer_callback_query(query.id, text="Sto generando l'offerta...")
 
             # Load template
-            body = self.__config__.get_template('coupon.md')
+            body = self.__config__.get_template('coupon.html')
 
             # Generate coupon
             js = generate_coupon(query.data.split('_')[2], self.__config__)
@@ -218,6 +276,6 @@ class CouponHandler(base.Command):
             # Send QR code
             context.bot.send_photo(chat_id=query.message.chat.id, photo=bio,
                                    caption=body.format(js['title'], js['description'], code, js['id']),
-                                   parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
+                                   parse_mode=ParseMode.HTML, reply_markup=reply_markup)
 
             context.bot.delete_message(chat_id=query.message.chat.id, message_id=query.message.message_id)
