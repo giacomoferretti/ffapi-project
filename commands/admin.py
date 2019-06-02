@@ -86,3 +86,9 @@ class AdminManager(base.Command):
                 except (Unauthorized, BadRequest):
                     context.bot.send_message(chat_id=update.effective_chat.id,
                                              text='There was an error sending the message.')
+
+    @run_async
+    def users_info(self, update: Update, context: CallbackContext):
+        if self.can_run(update, context):
+            context.bot.send_message(chat_id=update.effective_chat.id, text='Ci sono {} utenti attivi.'
+                                     .format(len(self.__users__.to_dict())))

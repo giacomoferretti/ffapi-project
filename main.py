@@ -74,6 +74,7 @@ def main():
     # Admin handler - Handles all the admin commands
     updater.dispatcher.add_handler(CommandHandler('broadcast', __admin_handler.broadcast))
     updater.dispatcher.add_handler(CommandHandler('send', __admin_handler.send_message))
+    updater.dispatcher.add_handler(CommandHandler('users', __admin_handler.users_info))
     updater.dispatcher.add_handler(MessageHandler(Filters.reply, __admin_handler.send_broadcast))
 
     # Error handler

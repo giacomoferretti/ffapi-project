@@ -49,3 +49,6 @@ class Users:
     def remove_user(self, id_):
         self.__users__.pop(str(id_))
         self.__save_users()
+
+    def to_dict(self):
+        return self.__users__
