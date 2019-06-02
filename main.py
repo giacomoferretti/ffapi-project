@@ -15,7 +15,6 @@
 #  limitations under the License.
 
 import logging
-import os
 import traceback
 
 from telegram import Update
@@ -26,7 +25,7 @@ from commands import promo, coupon, admin
 from utils import config, users, logger
 
 __major__ = 0
-__minor__ = 2
+__minor__ = 3
 __patch__ = 0
 __metadata__ = ''
 __version__ = '{}.{}.{}{}'.format(__major__, __minor__, __patch__, __metadata__)
@@ -52,27 +51,30 @@ def error(update: Update, context: CallbackContext):
 def main():
     updater = Updater(__config__.get_token(), use_context=True)
 
-    # Log all messages
-    updater.dispatcher.add_handler(MessageHandler(Filters.text | Filters.command, logger.log_message), group=1)
-    updater.dispatcher.add_handler(CallbackQueryHandler(logger.log_callback), group=1)
+    # Handlers
+    __logger_handler = logger.LoggerHandler(__config__, __users__)
+    __admin_handler = admin.AdminManager(__config__, __users__)
+    __promo_handler = promo.PromoCommand(__config__)
+    __coupon_handler = coupon.CouponHandler(__config__)
 
-    # Commands
-    __admin = admin.AdminManager(__config__, __users__)
-    __promo = promo.PromoCommand(__config__)
-    __coupon = coupon.CouponHandler(__config__)
+    # Logger handler - Logs all messages and callbacks
+    updater.dispatcher.add_handler(MessageHandler(Filters.text | Filters.command, __logger_handler.log_message), group=1)
+    updater.dispatcher.add_handler(CallbackQueryHandler(__logger_handler.log_callback), group=1)
 
-    updater.dispatcher.add_handler(CommandHandler('start', __coupon.home))
-    updater.dispatcher.add_handler(CallbackQueryHandler(__coupon.callback, pattern='{}.*'.format(__coupon.name)))
+    # Main handlers - Coupons and homepage
+    updater.dispatcher.add_handler(CommandHandler('start', __coupon_handler.home))
+    updater.dispatcher.add_handler(CallbackQueryHandler(__coupon_handler.callback, pattern='{}.*'
+                                                        .format(__coupon_handler.name)))
 
-    # updater.dispatcher.add_handler(CommandHandler('admin', __admin.admin_handler))
-    # updater.dispatcher.add_handler(CommandHandler('maintenance', __admin.maintenance_handler))
-    updater.dispatcher.add_handler(CommandHandler('promo', __promo.handler))
+    # Promo handler - Generates promocodes
+    updater.dispatcher.add_handler(CommandHandler('promo', __promo_handler.handler))
+    updater.dispatcher.add_handler(CallbackQueryHandler(__promo_handler.callback_handler, pattern='{}.*'
+                                                        .format(__promo_handler.name)))
 
-    updater.dispatcher.add_handler(CommandHandler('broadcast', __admin.broadcast))
-    updater.dispatcher.add_handler(MessageHandler(Filters.reply, __admin.send_broadcast))
-
-    updater.dispatcher.add_handler(CommandHandler('send', __admin.send_message))
-    # updater.dispatcher.add_handler(CallbackQueryHandler(keyboard_handler))
+    # Admin handler - Handles all the admin commands
+    updater.dispatcher.add_handler(CommandHandler('broadcast', __admin_handler.broadcast))
+    updater.dispatcher.add_handler(CommandHandler('send', __admin_handler.send_message))
+    updater.dispatcher.add_handler(MessageHandler(Filters.reply, __admin_handler.send_broadcast))
 
     # Error handler
     updater.dispatcher.add_error_handler(error)
