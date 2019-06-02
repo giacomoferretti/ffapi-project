@@ -33,10 +33,9 @@ class Command:
         return query == '{}_{}'.format(self.name, command)
 
     def can_run(self, update: Update, context: CallbackContext):
-        if self.__config__.get_maintenance():
-            if not self.__config__.is_admin(update.effective_user['id']):
-                self.reply_maintenance(update, context)
-                return False
+        if self.__config__.get_maintenance() and not self.__config__.is_admin(update.effective_user['id']):
+            self.reply_maintenance(update, context)
+            return False
 
         if self.admins_only and not self.__config__.is_admin(update.effective_user['id']):
             return False
@@ -48,5 +47,5 @@ class Command:
 
     def reply_maintenance(self, update: Update, context: CallbackContext):
         context.bot.send_message(chat_id=update.effective_chat.id,
-                                 text="\u26d4 Il bot è in manutenzione.\n"
-                                      "Manutenzione iniziata  {}".format(self.__config__.get_maintenance_time()))
+                                 text='\u26d4 Il bot è in manutenzione.\n'
+                                      'Manutenzione iniziata {}'.format(self.__config__.get_maintenance_time()))
