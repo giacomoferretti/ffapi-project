@@ -1,6 +1,6 @@
-# 0.2.0
+## 0.2.0
 
-## New
+### New
 **config.json**
 * Added the ability to go through a proxy to create coupons
 
@@ -9,7 +9,7 @@
   * `/broadcast` - It let's you send a message to all active users
   * `/send [id] [message]` - It let's you send a message to a specific active user
 
-## Fixes
+### Fixes
 **General Fixes**
 * General optimization and better performance
 
@@ -19,5 +19,5 @@
 **coupon.py**
 * Added check for empty `customTitle`
 
-# 0.1.0
+## 0.1.0
 * First public release
