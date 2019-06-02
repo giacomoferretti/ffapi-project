@@ -18,7 +18,10 @@ import os
 import sys
 from logging.handlers import TimedRotatingFileHandler
 
-from telegram.ext import run_async
+from telegram import Update
+from telegram.ext import run_async, CallbackContext
+
+from commands import base
 
 
 class InfoFilter(logging.Filter):
@@ -69,14 +72,22 @@ def init():
     __logger__ = logging.getLogger(__name__)
 
 
-@run_async
-def log_message(update, context):
-    __logger__.info('[{}] {}: {}'.format(update.effective_user['id'], update.effective_user['first_name'],
-                                         update.message.text))
+class LoggerHandler(base.Command):
+    name = 'logger'
 
+    def __init__(self, __config__, __users__):
+        super().__init__(__config__)
+        self.__users__ = __users__
 
-@run_async
-def log_callback(update, context):
-    __logger__.info('[{}] {} => {}'.format(update.callback_query['message']['chat']['id'],
-                                           update.callback_query['message']['chat']['first_name'],
-                                           update.callback_query.data))
+    @run_async
+    def log_message(self, update: Update, context: CallbackContext):
+        self.__users__.add_user(update.effective_user.to_dict())
+        __logger__.info('[{}] {}: {}'.format(update.effective_user['id'], update.effective_user['first_name'],
+                                             update.message.text))
+
+    @run_async
+    def log_callback(self, update: Update, context: CallbackContext):
+        self.__users__.add_user(update.effective_user.to_dict())
+        __logger__.info('[{}] {} => {}'.format(update.callback_query['message']['chat']['id'],
+                                               update.callback_query['message']['chat']['first_name'],
+                                               update.callback_query.data))
