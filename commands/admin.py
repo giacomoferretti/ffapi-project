@@ -15,8 +15,11 @@
 #  limitations under the License.
 
 import logging
+import os
 import traceback
+from datetime import datetime
 
+import psutil as psutil
 from telegram import Update, ParseMode
 from telegram.error import Unauthorized, BadRequest
 from telegram.ext import CallbackContext, run_async
@@ -86,6 +89,16 @@ class AdminManager(base.Command):
                 except (Unauthorized, BadRequest):
                     context.bot.send_message(chat_id=update.effective_chat.id,
                                              text='There was an error sending the message.')
+
+    @run_async
+    def uptime(self, update: Update, context: CallbackContext):
+        if self.can_run(update, context):
+            p = psutil.Process(os.getpid())
+            uptime = datetime.now() - datetime.fromtimestamp(p.create_time())
+            hours, remainder = divmod(uptime.seconds, 3600)
+            minutes, seconds = divmod(remainder, 60)
+            context.bot.send_message(chat_id=update.effective_chat.id, text='{:02}:{:02}:{:02}'
+                                     .format(int(hours), int(minutes), int(seconds)))
 
     @run_async
     def users_info(self, update: Update, context: CallbackContext):
