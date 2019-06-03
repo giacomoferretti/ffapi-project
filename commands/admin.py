@@ -90,5 +90,11 @@ class AdminManager(base.Command):
     @run_async
     def users_info(self, update: Update, context: CallbackContext):
         if self.can_run(update, context):
-            context.bot.send_message(chat_id=update.effective_chat.id, text='Ci sono {} utenti attivi.'
-                                     .format(len(self.__users__.to_dict())))
+            body = 'Ci sono <b>{users}</b> utenti attivi.'.format(users=len(self.__users__.to_dict()))
+            for x in self.__users__.to_dict():
+                user = self.__users__.to_dict()[x]
+                body += '\n[{id}] {first_name}'.format(id=x, first_name=user['first_name'])
+                if 'username' in user:
+                    body += ': <a href="tg://user?id={id}">@{username}</a>'.format(id=x, username=user['username'])
+            context.bot.send_message(chat_id=update.effective_chat.id, text=body.format(len(self.__users__.to_dict())),
+                                     parse_mode=ParseMode.HTML)
