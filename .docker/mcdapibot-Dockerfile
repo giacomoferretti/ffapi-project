@@ -6,7 +6,7 @@ COPY requirements.txt /
 
 RUN apk add --no-cache --virtual persistent python3 libjpeg-turbo-dev \
 && apk add --no-cache --virtual build python3-dev gcc musl-dev libffi-dev openssl-dev libjpeg-turbo-dev zlib-dev \
-&& pip3 install -r /requirements-docker.txt && rm -rf /root/.cache && apk del build
+&& pip3 install -r /requirements.txt && rm -rf /root/.cache && apk del build
 
 # Fix for timezone
 RUN apk add tzdata
