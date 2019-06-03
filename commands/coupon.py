@@ -209,7 +209,7 @@ class CouponHandler(base.Command):
             # Get session
             session = get_session(self.__config__)
 
-            # Edit message
+            # Delete calling message
             context.bot.delete_message(chat_id=query.message.chat.id, message_id=query.message.message_id)
 
             id_ = query.data.split('_')[3]
@@ -244,6 +244,11 @@ class CouponHandler(base.Command):
         elif query.data.startswith('{}_id'.format(self.name)):
             # Edit message
             context.bot.answer_callback_query(query.id, text="Sto generando l'offerta...")
+
+            # Remove keyboard from calling message
+            context.bot.edit_message_reply_markup(chat_id=query.message.chat.id,
+                                                  message_id=query.message.message_id,
+                                                  reply_markup=None)
 
             # Load template
             body = self.__config__.get_template('coupon.html')
