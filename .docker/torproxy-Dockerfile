@@ -1,5 +1,6 @@
 # Grab latest Apline Linux
 FROM alpine:latest
+LABEL maintainer="me@hexile.xyz"
 
 # Arguments
 ARG socks_port
@@ -7,7 +8,7 @@ ARG control_password
 ARG control_port
 
 # Install Tor
-RUN apk update && apk add tor --update-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/community/ && rm -rf /var/cache/apk/*
+RUN apk add tor --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/community/
 RUN tor --version
 EXPOSE $socks_port
 # COPY torrc.default /etc/tor/torrc.default

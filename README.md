@@ -27,11 +27,15 @@ proxyUrl: URL of the proxy, if enabled
 ## Running the bot
 You can run the bot using one of these three methods
 
-### Docker Compose
-Simply run `docker-compose up`
-
 ### Docker
-Estimated build time: 10 minutes
+| Image     | Build Time (Without cache) | Size   |
+|-----------|----------------------------|--------|
+| torproxy  | ~13 seconds                | ~17MB  |
+| mcdapibot | ~2 minutes and 30 seconds  | ~111MB |
+
+If you have Docker Compose simply run `docker-compose up`.
+
+If not use this commands:
 ```bash
 docker build . -t torproxy -f .docker/torproxy-Dockerfile --build-arg socks_port=9050 --build-arg control_password="password" --build-arg control_port=9051
 docker build . -t mcdapibot -f .docker/mcdapibot-Dockerfile
@@ -39,6 +43,15 @@ docker build . -t mcdapibot -f .docker/mcdapibot-Dockerfile
 docker run -d --name=torproxy torproxy
 docker run -d --name=mcdapibot --link=torproxy -v $(pwd)/logs:/app/logs -v $(pwd)/templates:/app/templates -v $(pwd)/config.json:/app/config.json -v $(pwd)/users.json:/app/users.json -v $(pwd)/offers.json:/app/offers.json mcdapibot
 ```
+### Docker Compose
+Simply run `docker-compose up`
+
+### Docker
+* torproxy: ~13 seconds (~17MB)
+* mcdapibot: ~2:21 (~108MB)
+
+Estimated build time: 10 minutes
+
 
 ### Simple python
 ```bash

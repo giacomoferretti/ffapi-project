@@ -1,31 +1,16 @@
 # Grab latest Apline Linux
 FROM alpine:latest
+LABEL maintainer="me@hexile.xyz"
 
-# Install Python3 and Tor
-RUN apk update && apk add python3-dev
+COPY requirements-docker.txt /
 
-RUN apk add gcc
+RUN apk add --no-cache --virtual persistent python3 libjpeg-turbo-dev \
+&& apk add --no-cache --virtual build python3-dev gcc musl-dev libffi-dev openssl-dev libjpeg-turbo-dev zlib-dev \
+&& pip3 install -r /requirements-docker.txt && rm -rf /root/.cache && apk del build
 
 # Fix for timezone
 RUN apk add tzdata
 RUN cp /usr/share/zoneinfo/Europe/Rome /etc/localtime
-
-# Needed for cryptography
-RUN apk add musl-dev
-RUN apk add libffi-dev
-RUN apk add openssl-dev
-
-# Needed for Pillow
-RUN apk add libjpeg-turbo-dev
-RUN apk add zlib-dev
-
-RUN rm -rf /var/cache/apk/*
-
-COPY docker-requirements.1 /
-COPY docker-requirements.2 /
-
-RUN pip3 install -r /docker-requirements.1
-RUN pip3 install -r /docker-requirements.2
 
 COPY . /app
 WORKDIR /app
