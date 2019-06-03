@@ -2,7 +2,7 @@
 FROM alpine:latest
 LABEL maintainer="me@hexile.xyz"
 
-COPY requirements-docker.txt /
+COPY requirements.txt /
 
 RUN apk add --no-cache --virtual persistent python3 libjpeg-turbo-dev \
 && apk add --no-cache --virtual build python3-dev gcc musl-dev libffi-dev openssl-dev libjpeg-turbo-dev zlib-dev \
