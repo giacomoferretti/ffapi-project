@@ -14,7 +14,7 @@ You can see a running example here: [@mcdapi_bot](https://telegram.me/mcdapi_bot
 ## Setting the bot up
 Copy or rename `config.base.json` to `config.json` and edit it following this guide:
 
-```
+```text
 token: You have to create a bot and get the token from @botfather on Telegram
 ownerId: Your Telegram ID (Not necessary)
 ownerUsername: Your Telegram username (Not necessary)
@@ -28,7 +28,7 @@ proxyUrl: URL of the proxy, if enabled
 You can run the bot using one of these three methods
 
 ### Docker
-| Image     | Build Time (Without cache) | Size   |
+| Image     | Build time (without cache) | Size   |
 |-----------|----------------------------|--------|
 | torproxy  | ~13 seconds                | ~17MB  |
 | mcdapibot | ~2 minutes and 30 seconds  | ~111MB |
@@ -43,17 +43,8 @@ docker build . -t mcdapibot -f .docker/mcdapibot-Dockerfile
 docker run -d --name=torproxy torproxy
 docker run -d --name=mcdapibot --link=torproxy -v $(pwd)/logs:/app/logs -v $(pwd)/templates:/app/templates -v $(pwd)/config.json:/app/config.json -v $(pwd)/users.json:/app/users.json -v $(pwd)/offers.json:/app/offers.json mcdapibot
 ```
-### Docker Compose
-Simply run `docker-compose up`
 
-### Docker
-* torproxy: ~13 seconds (~17MB)
-* mcdapibot: ~2:21 (~108MB)
-
-Estimated build time: 10 minutes
-
-
-### Simple python
+### Python 3
 ```bash
 pip3 install -r requirements.txt
 python3 main.py
