@@ -38,7 +38,11 @@ class Config:
                              'https://github.com/giacomoferretti/mcdapi-telegram-bot'.format(__config_file__))
             exit(101)
 
-        if not os.path.isfile(__offers_file__):
+        if os.path.isfile(__offers_file__):
+            __logger__.info('Loading "{}"...'.format(__offers_file__))
+            with open(__offers_file__) as f:
+                self.__offers__ = json.loads(f.read())
+        else:
             __logger__.error('E102: "{}" not found. Checkout https://github.com/giacomoferretti/mcdapi-tools '
                              'to see how to get the offers.'.format(__offers_file__))
             exit(102)
