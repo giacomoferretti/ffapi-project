@@ -38,13 +38,21 @@ class Users:
 
     def __save_users(self):
         with open(__users_file__, 'w') as f:
-            f.write(json.dumps(self.__users__))
+            f.write(json.dumps(self.__users__, indent=2))
 
     def get_users(self):
         return self.__users__
 
     def add_user(self, user):
-        self.__users__[str(user['id'])] = user
+        user_dict = {
+            'firstName': user.get('first_name', ''),
+            'lastName': user.get('last_name', ''),
+            'username': user.get('username', ''),
+            'languageCode': user.get('language_code', ''),
+            'active': True,
+            'offersGenerated': 0
+        }
+        self.__users__[str(user['id'])] = user_dict
         self.__save_users()
 
     def remove_user(self, id_):
