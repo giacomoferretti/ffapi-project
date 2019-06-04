@@ -120,8 +120,10 @@ class AdminManager(base.Command):
     @run_async
     def check_users(self, update: Update, context: CallbackContext):
         if self.can_run(update, context):
-            for user in self.__users__.get_users():
+            for user in list(self.__users__.get_users()):
                 try:
                     context.bot.send_chat_action(chat_id=user, action=ChatAction.TYPING)
                 except Unauthorized:
                     print('{} blocked the bot.'.format(user))
+                except BadRequest as e:
+                    print('BadRequest: {}'.format(e.message))
