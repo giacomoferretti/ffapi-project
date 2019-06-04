@@ -16,8 +16,10 @@
 
 import json
 import logging
+import os
 import re
 import socket
+from datetime import timedelta
 from io import BytesIO
 
 import qrcode
@@ -29,12 +31,27 @@ from telegram.ext import CallbackContext, run_async
 from commands import base
 from utils import config
 
-__offers_file__ = 'offers.json'
+__image_folder__ = 'images'
 
 
-def get_offers():
-    with open(__offers_file__) as f:
-        return json.loads(f.read())
+def get_days(l):
+    days = []
+    for x in l:
+        if x == 0:
+            days.append('Domenica')
+        elif x == 1:
+            days.append('Lunedì')
+        elif x == 2:
+            days.append('Martedì')
+        elif x == 3:
+            days.append('Mercoledì')
+        elif x == 4:
+            days.append('Giovedì')
+        elif x == 5:
+            days.append('Venerdì')
+        elif x == 6:
+            days.append('Sabato')
+    return ' - '.join(days)
 
 
 def parse_url(url):
@@ -137,10 +154,9 @@ class CouponHandler(base.Command):
 
     @run_async
     def home(self, update: Update, context: CallbackContext):
-        offers = get_offers()
-
         body = self.__config__.get_template('home.html')\
-            .format(name=update.effective_user['first_name'], id=update.effective_user['id'], coupons=len(offers))
+            .format(name=update.effective_user['first_name'], id=update.effective_user['id'],
+                    coupons=len(self.__config__.__offers__))
 
         # Create inline keyboard
         keyboard = [
@@ -183,18 +199,17 @@ class CouponHandler(base.Command):
             context.bot.delete_message(chat_id=query.message.chat.id, message_id=query.message.message_id)
 
             # Populate keyboard
-            # Load offers
-            offers = get_offers()
-
             keyboard = []
-            for x in offers:
-                offer_title = x['title']
-                if x['customTitle'] != '':
-                    offer_title = x['customTitle']
+            for x in self.__config__.__offers__:
+                offer_title = self.__config__.__offers__[x]['title']
+                if self.__config__.__offers__[x]['customTitle'] != '':
+                    offer_title = self.__config__.__offers__[x]['customTitle']
 
-                keyboard.append([InlineKeyboardButton(offer_title, callback_data='{}_info_id_{}'.format(self.name,
-                                                                                                   x['id']))])
-            keyboard.append([InlineKeyboardButton("\U0001F519  Menu principale",
+                if self.__config__.__offers__[x]['special']:
+                    offer_title = '\U0001F552 ' + offer_title
+
+                keyboard.append([InlineKeyboardButton(offer_title, callback_data='{}_info_id_{}'.format(self.name, x))])
+            keyboard.append([InlineKeyboardButton("\u2b05 Menu principale",
                                                   callback_data='{}_homepage_r'.format(self.name))])
             reply_markup = InlineKeyboardMarkup(keyboard)
 
@@ -215,32 +230,46 @@ class CouponHandler(base.Command):
 
             id_ = query.data.split('_')[3]
 
-            # Load offers
-            with open(__offers_file__) as f:
-                offers = json.loads(f.read())
-                offer_index = next((index for (index, d) in enumerate(offers) if d['id'] == int(id_)), None)
+            offer = self.__config__.__offers__[str(id_)]
 
-            params = endpoints.PROMO_IMAGE['params']
-            params['path'] = offers[offer_index]['promoImagePath']
-            params['imageFormat'] = 'png'
-            r = session.request(endpoints.PROMO_IMAGE['method'], endpoints.PROMO_IMAGE['url'].format(size=512),
-                                params=params)
+            if os.path.isfile(os.path.join(__image_folder__, offer['promoImagePath'])):
+                with open(os.path.join(__image_folder__, offer['promoImagePath']), 'rb') as f:
+                    image = f.read()
+            else:
+                params = endpoints.PROMO_IMAGE['params']
+                params['path'] = offer['promoImagePath']
+                params['imageFormat'] = 'png'
+                r = session.request(endpoints.PROMO_IMAGE['method'], endpoints.PROMO_IMAGE['url'].format(size=512),
+                                    params=params)
 
-            if r.status_code == 200:
-                # Create inline keyboard
-                keyboard = [
-                    [
-                        InlineKeyboardButton('\u2705 Va bene', callback_data='{}_id_{}'.format(self.name, id_)),
-                        InlineKeyboardButton('\u2b05 Torna indietro', callback_data='{}_list'.format(self.name))
-                    ]
+                if r.status_code == 200:
+                    with open(os.path.join(__image_folder__, offer['promoImagePath']), 'wb') as f:
+                        f.write(r.content)
+                        image = r.content
+
+            # Create inline keyboard
+            keyboard = [
+                [
+                    InlineKeyboardButton('\u2705 Va bene', callback_data='{}_id_{}'.format(self.name, id_)),
+                    InlineKeyboardButton('\u2b05 Torna indietro', callback_data='{}_list'.format(self.name))
                 ]
-                reply_markup = InlineKeyboardMarkup(keyboard)
+            ]
+            reply_markup = InlineKeyboardMarkup(keyboard)
 
-                body = self.__config__.get_template('coupon_preview.html')\
-                    .format(title=offers[offer_index]['title'],  description=offers[offer_index]['description'])
+            extra_content = ''
+            if offer['special']:
+                days = get_days(offer['daysOfWeek'])
+                start_time = str(timedelta(minutes=offer['dailyStartTime']))[:-3]
+                end_time = str(timedelta(minutes=offer['dailyEndTime']))[:-3]
+                extra_content = '<b>Questa è un\'offerta speciale!</b>\n' \
+                                'Può essere riscatta solo nei seguenti giorni: <i>{}</i>\n' \
+                                'E solo nei seguenti orari: <i>{} - {}</i>'.format(days, start_time, end_time)
 
-                context.bot.send_photo(chat_id=query.message.chat.id, photo=BytesIO(r.content), caption=body,
-                                       parse_mode=ParseMode.HTML, reply_markup=reply_markup)
+            body = self.__config__.get_template('coupon_preview.html')\
+                .format(title=offer['title'],  description=offer['description'], extra=extra_content)
+
+            context.bot.send_photo(chat_id=query.message.chat.id, photo=BytesIO(image), caption=body,
+                                   parse_mode=ParseMode.HTML, reply_markup=reply_markup)
 
         elif query.data.startswith('{}_id'.format(self.name)):
             # Edit message
@@ -258,30 +287,46 @@ class CouponHandler(base.Command):
 
             # Generate coupon
             js = generate_coupon(query.data.split('_')[2], self.__config__)
-            code = js['redemptionText']
 
-            # Generate QR code
-            qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_Q, box_size=15, border=10)
-            qr.add_data(code)
-            qr.make(fit=True)
-            img = qr.make_image(fill_color="black", back_color="white")
+            # TODO: Temporary fix
+            try:
+                code = js['redemptionText']
 
-            # Create inline keyboard
-            keyboard = [
-                [
-                    InlineKeyboardButton("\U0001F519  Menu principale", callback_data='{}_homepage'.format(self.name))
+                # Generate QR code
+                qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_Q, box_size=15, border=10)
+                qr.add_data(code)
+                qr.make(fit=True)
+                img = qr.make_image(fill_color="black", back_color="white")
+
+                # Create inline keyboard
+                keyboard = [
+                    [
+                        InlineKeyboardButton("\u2b05 Menu principale", callback_data='{}_homepage'.format(self.name))
+                    ]
                 ]
-            ]
-            reply_markup = InlineKeyboardMarkup(keyboard)
+                reply_markup = InlineKeyboardMarkup(keyboard)
 
-            # Read QR code bytes
-            bio = BytesIO()
-            img.save(bio, 'PNG')
-            bio.seek(0)
+                # Read QR code bytes
+                bio = BytesIO()
+                img.save(bio, 'PNG')
+                bio.seek(0)
 
-            # Send QR code
-            context.bot.send_photo(chat_id=query.message.chat.id, photo=bio,
-                                   caption=body.format(js['title'], js['description'], code, js['id']),
-                                   parse_mode=ParseMode.HTML, reply_markup=reply_markup)
+                # Send QR code
+                context.bot.send_photo(chat_id=query.message.chat.id, photo=bio,
+                                       caption=body.format(js['title'], js['description'], code, js['id']),
+                                       parse_mode=ParseMode.HTML, reply_markup=reply_markup)
+            except KeyError:
+                # Create inline keyboard
+                keyboard = [
+                    [
+                        InlineKeyboardButton("\u2b05 Menu principale",
+                                             callback_data='{}_homepage_r'.format(self.name))
+                    ]
+                ]
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                context.bot.send_message(chat_id=query.message.chat.id,
+                                         text='C\'è stato un errore.\n'
+                                              'Contatta l\'admin per avere più informazioni.',
+                                         reply_markup=reply_markup)
 
             context.bot.delete_message(chat_id=query.message.chat.id, message_id=query.message.message_id)
