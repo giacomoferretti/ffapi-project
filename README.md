@@ -24,6 +24,8 @@ proxyEnabled: Enables and disables generating coupons through a proxy
 proxyUrl: URL of the proxy, if enabled
 ```
 
+You can download `offers.json` already scraped and parsed with `mcdapi-tools` [here](https://gist.github.com/giacomoferretti/a24797299041692613c155cac79b8127).
+
 ## Running the bot
 You can run the bot using one of these three methods
 
@@ -41,7 +43,7 @@ docker build . -t torproxy -f .docker/torproxy-Dockerfile --build-arg socks_port
 docker build . -t mcdapibot -f .docker/mcdapibot-Dockerfile
 
 docker run -d --name=torproxy torproxy
-docker run -d --name=mcdapibot --link=torproxy -v $(pwd)/logs:/app/logs -v $(pwd)/templates:/app/templates -v $(pwd)/config.json:/app/config.json -v $(pwd)/users.json:/app/users.json -v $(pwd)/offers.json:/app/offers.json mcdapibot
+docker run -d --name=mcdapibot --link=torproxy -v $(pwd)/images:/app/images -v $(pwd)/logs:/app/logs -v $(pwd)/templates:/app/templates -v $(pwd)/config.json:/app/config.json -v $(pwd)/users.json:/app/users.json -v $(pwd)/offers.json:/app/offers.json mcdapibot
 ```
 
 ### Python 3
