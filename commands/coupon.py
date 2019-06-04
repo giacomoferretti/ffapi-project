@@ -23,7 +23,7 @@ from io import BytesIO
 import qrcode
 import requests
 from mcdapi import coupon, endpoints
-from telegram import Update, ParseMode, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, ParseMode, InlineKeyboardButton, InlineKeyboardMarkup, ChatAction
 from telegram.ext import CallbackContext, run_async
 
 from commands import base
@@ -205,6 +205,7 @@ class CouponHandler(base.Command):
         elif query.data.startswith('{}_info_id'.format(self.name)):
             # Answer callback
             context.bot.answer_callback_query(query.id, text='Sto caricando l\'offerta...')
+            context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.UPLOAD_PHOTO)
 
             # Get session
             session = get_session(self.__config__)
@@ -229,8 +230,8 @@ class CouponHandler(base.Command):
                 # Create inline keyboard
                 keyboard = [
                     [
-                        InlineKeyboardButton('Va bene', callback_data='{}_id_{}'.format(self.name, id_)),
-                        InlineKeyboardButton('Torna indietro', callback_data='{}_list'.format(self.name))
+                        InlineKeyboardButton('\u2705 Va bene', callback_data='{}_id_{}'.format(self.name, id_)),
+                        InlineKeyboardButton('\u2b05 Torna indietro', callback_data='{}_list'.format(self.name))
                     ]
                 ]
                 reply_markup = InlineKeyboardMarkup(keyboard)
@@ -249,6 +250,8 @@ class CouponHandler(base.Command):
             context.bot.edit_message_reply_markup(chat_id=query.message.chat.id,
                                                   message_id=query.message.message_id,
                                                   reply_markup=None)
+
+            context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.UPLOAD_PHOTO)
 
             # Load template
             body = self.__config__.get_template('coupon.html')
