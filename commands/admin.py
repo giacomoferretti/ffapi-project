@@ -20,7 +20,7 @@ import traceback
 from datetime import datetime
 
 import psutil as psutil
-from telegram import Update, ParseMode
+from telegram import Update, ParseMode, ChatAction
 from telegram.error import Unauthorized, BadRequest
 from telegram.ext import CallbackContext, run_async
 
@@ -104,10 +104,24 @@ class AdminManager(base.Command):
     def users_info(self, update: Update, context: CallbackContext):
         if self.can_run(update, context):
             body = 'Ci sono <b>{users}</b> utenti attivi.'.format(users=len(self.__users__.to_dict()))
+            context.bot.send_message(chat_id=update.effective_chat.id, text=body, parse_mode=ParseMode.HTML)
+
+    @run_async
+    def users_list(self, update: Update, context: CallbackContext):
+        if self.can_run(update, context):
+            body = ''
             for x in self.__users__.to_dict():
                 user = self.__users__.to_dict()[x]
                 body += '\n[{id}] {first_name}'.format(id=x, first_name=user['first_name'])
                 if 'username' in user:
                     body += ': <a href="tg://user?id={id}">@{username}</a>'.format(id=x, username=user['username'])
-            context.bot.send_message(chat_id=update.effective_chat.id, text=body.format(len(self.__users__.to_dict())),
-                                     parse_mode=ParseMode.HTML)
+            context.bot.send_message(chat_id=update.effective_chat.id, text=body, parse_mode=ParseMode.HTML)
+
+    @run_async
+    def check_users(self, update: Update, context: CallbackContext):
+        if self.can_run(update, context):
+            for user in self.__users__.get_users():
+                try:
+                    context.bot.send_chat_action(chat_id=user, action=ChatAction.TYPING)
+                except Unauthorized:
+                    print('{} blocked the bot.'.format(user))

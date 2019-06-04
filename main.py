@@ -76,6 +76,8 @@ def main():
     updater.dispatcher.add_handler(CommandHandler('send', __admin_handler.send_message))
     updater.dispatcher.add_handler(CommandHandler('uptime', __admin_handler.uptime))
     updater.dispatcher.add_handler(CommandHandler('users', __admin_handler.users_info))
+    updater.dispatcher.add_handler(CommandHandler('users_list', __admin_handler.users_list))
+    updater.dispatcher.add_handler(CommandHandler('check', __admin_handler.check_users))
     updater.dispatcher.add_handler(MessageHandler(Filters.reply, __admin_handler.send_broadcast))
 
     # Error handler
