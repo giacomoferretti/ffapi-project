@@ -155,8 +155,7 @@ class CouponHandler(base.Command):
     @run_async
     def home(self, update: Update, context: CallbackContext):
         body = self.__config__.get_template('home.html')\
-            .format(name=update.effective_user['first_name'], id=update.effective_user['id'],
-                    coupons=len(self.__config__.__offers__))
+            .format(id=update.effective_user['id'], coupons=len(self.__config__.__offers__))
 
         # Create inline keyboard
         keyboard = [
@@ -167,7 +166,8 @@ class CouponHandler(base.Command):
                 InlineKeyboardButton("Genera Promocode", callback_data='promo_generate')
             ],
             [
-                InlineKeyboardButton("Source Code", url='https://github.com/giacomoferretti/mcdapi-telegram-bot')
+                InlineKeyboardButton("\u2753 F.A.Q.", callback_data='coupon_faq'),
+                InlineKeyboardButton("Source Code", url='http://bit.ly/2XvxXey')
             ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -330,3 +330,10 @@ class CouponHandler(base.Command):
                                          reply_markup=reply_markup)
 
             context.bot.delete_message(chat_id=query.message.chat.id, message_id=query.message.message_id)
+
+        elif self.check_callback(query.data, 'faq'):
+            # Load template
+            body = self.__config__.get_template('faq.html').format(id=self.__config__.get_owner_id(),
+                                                                   name=self.__config__.get_owner_username())
+
+            context.bot.send_message(chat_id=query.message.chat.id, text=body, parse_mode=ParseMode.HTML)
