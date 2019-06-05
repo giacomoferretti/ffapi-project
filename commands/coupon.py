@@ -260,7 +260,7 @@ class CouponHandler(base.Command):
                 params = endpoints.PROMO_IMAGE['params']
                 params['path'] = offer['promoImagePath']
                 params['imageFormat'] = 'png'
-                r = session.request(endpoints.PROMO_IMAGE['method'], endpoints.PROMO_IMAGE['url'].format(size=512),
+                r = session.request(endpoints.PROMO_IMAGE['method'], endpoints.PROMO_IMAGE['url'].format(size=1080),
                                     params=params)
 
                 if r.status_code == 200:
