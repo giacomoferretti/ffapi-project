@@ -53,4 +53,6 @@ python3 main.py
 ```
 
 ## Disclaimer
-This repository is not affiliated with Mcdonald's Corp in any way. "McDonald's" and "McDonald's Logo" are registered trademarks of Mcdonald's Corp.
+This repository is against McDonald's ToS.
+
+This repository is not affiliated with McDonald's Corp in any way. "McDonald's" and "McDonald's Logo" are registered trademarks of McDonald's Corp.
