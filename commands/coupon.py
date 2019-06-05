@@ -24,6 +24,7 @@ from io import BytesIO
 
 import qrcode
 import requests
+from PIL import Image, ImageDraw
 from mcdapi import coupon, endpoints
 from telegram import Update, ParseMode, InlineKeyboardButton, InlineKeyboardMarkup, ChatAction
 from telegram.ext import CallbackContext, run_async
@@ -32,6 +33,26 @@ from commands import base
 from utils import config
 
 __image_folder__ = 'images'
+
+
+def round_corner(radius, fill):
+    """Draw a round corner"""
+    corner = Image.new('RGBA', (radius, radius), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(corner)
+    draw.pieslice((0, 0, radius * 2, radius * 2), 180, 270, fill=fill)
+    return corner
+
+
+def round_rectangle(size, radius, fill):
+    """Draw a rounded rectangle"""
+    width, height = size
+    rectangle = Image.new('RGBA', size, fill)
+    corner = round_corner(radius, fill)
+    rectangle.paste(corner, (0, 0))
+    rectangle.paste(corner.rotate(90), (0, height - radius))  # Rotate the corner and paste it
+    rectangle.paste(corner.rotate(180), (width - radius, height - radius))
+    rectangle.paste(corner.rotate(270), (width - radius, 0))
+    return rectangle
 
 
 def get_days(l):
@@ -160,7 +181,7 @@ class CouponHandler(base.Command):
         # Create inline keyboard
         keyboard = [
             [
-                InlineKeyboardButton("\U0001F354  Lista coupons", callback_data='{}_list'.format(self.name))
+                InlineKeyboardButton("\U0001F354 Lista coupons", callback_data='{}_list'.format(self.name))
             ],
             [
                 InlineKeyboardButton("Genera Promocode", callback_data='promo_generate')
@@ -293,10 +314,26 @@ class CouponHandler(base.Command):
                 code = js['redemptionText']
 
                 # Generate QR code
-                qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_Q, box_size=15, border=10)
+                qr = qrcode.QRCode(version=1, error_correction=qrcode.constants.ERROR_CORRECT_Q, box_size=15, border=0)
                 qr.add_data(code)
                 qr.make(fit=True)
-                img = qr.make_image(fill_color="black", back_color="white")
+                qr_image = qr.make_image(fill_color="black", back_color="white")
+
+                # Get offer background
+                id_ = query.data.split('_')[2]
+                offer = self.__config__.__offers__[str(id_)]
+
+                offer_background = Image.open(os.path.join(__image_folder__, offer['promoImagePath']))
+                qr_background = Image.open(os.path.join(__image_folder__, 'bg.png'))
+                offset = (350, 350)
+
+                image_width, image_height = offer_background.size
+                final_image = Image.new('RGBA', (image_width, image_height), offer_background.getpixel((0, 0)))
+
+                offer_background.putalpha(60)
+                final_image = Image.alpha_composite(final_image, offer_background)
+                final_image = Image.alpha_composite(final_image, qr_background)
+                final_image.paste(qr_image, offset)
 
                 # Create inline keyboard
                 keyboard = [
@@ -308,7 +345,7 @@ class CouponHandler(base.Command):
 
                 # Read QR code bytes
                 bio = BytesIO()
-                img.save(bio, 'PNG')
+                final_image.save(bio, 'PNG')
                 bio.seek(0)
 
                 # Send QR code
@@ -325,13 +362,13 @@ class CouponHandler(base.Command):
                 ]
                 reply_markup = InlineKeyboardMarkup(keyboard)
                 context.bot.send_message(chat_id=query.message.chat.id,
-                                         text='C\'è stato un errore.\n'
-                                              'Contatta l\'admin per avere più informazioni.',
-                                         reply_markup=reply_markup)
+                                         text='C\'è stato un errore. Riprova più tardi.', reply_markup=reply_markup)
 
             context.bot.delete_message(chat_id=query.message.chat.id, message_id=query.message.message_id)
 
         elif self.check_callback(query.data, 'faq'):
+            context.bot.answer_callback_query(query.id)
+
             # Load template
             body = self.__config__.get_template('faq.html').format(id=self.__config__.get_owner_id(),
                                                                    name=self.__config__.get_owner_username())
