@@ -19,3 +19,4 @@ offers.json
 logs/
 .docker/mcdapibot
 .docker/torproxy
+images/op*.png
