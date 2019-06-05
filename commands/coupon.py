@@ -287,7 +287,8 @@ class CouponHandler(base.Command):
                                 'E solo nei seguenti orari: <i>{} - {}</i>'.format(days, start_time, end_time)
 
             body = self.__config__.get_template('coupon_preview.html')\
-                .format(title=offer['title'],  description=offer['description'], extra=extra_content)
+                .format(title=offer['title'], description=offer['description'], id=id_, start_date=offer['startDate'],
+                        end_date=offer['endDate'], extra=extra_content)
 
             context.bot.send_photo(chat_id=query.message.chat.id, photo=BytesIO(image), caption=body,
                                    parse_mode=ParseMode.HTML, reply_markup=reply_markup)
