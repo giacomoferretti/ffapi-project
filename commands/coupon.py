@@ -155,7 +155,7 @@ def generate_coupon(id_, __config__: config.Config):
                         headers=headers)
 
     if r.status_code == 200:
-        js = json.loads(r.content)
+        js = json.loads(r.content.decode('utf-8'))
         token = js['access_token']
         headers['Authorization'] = 'bearer {}'.format(token)
 
