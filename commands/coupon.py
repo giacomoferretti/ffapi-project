@@ -27,6 +27,7 @@ import requests
 from PIL import Image, ImageDraw
 from mcdapi import coupon, endpoints
 from telegram import Update, ParseMode, InlineKeyboardButton, InlineKeyboardMarkup, ChatAction
+from telegram.error import BadRequest
 from telegram.ext import CallbackContext, run_async
 
 from commands import base
@@ -217,7 +218,10 @@ class CouponHandler(base.Command):
 
         elif self.check_callback(query.data, 'list'):
             # Delete calling message
-            context.bot.delete_message(chat_id=query.message.chat.id, message_id=query.message.message_id)
+            try:
+                context.bot.delete_message(chat_id=query.message.chat.id, message_id=query.message.message_id)
+            except BadRequest:
+                pass
 
             # Populate keyboard
             keyboard = []
