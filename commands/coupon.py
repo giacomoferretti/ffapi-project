@@ -333,7 +333,7 @@ class CouponHandler(base.Command):
                 offset = (350, 350)
 
                 image_width, image_height = offer_background.size
-                final_image = Image.new('RGBA', (image_width, image_height), offer_background.getpixel((0, 0)))
+                final_image = Image.new('RGBA', (image_width, image_height), offer_background.getpixel((0, image_height)))
 
                 offer_background.putalpha(60)
                 final_image = Image.alpha_composite(final_image, offer_background)
