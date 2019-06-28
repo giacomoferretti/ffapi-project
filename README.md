@@ -2,6 +2,7 @@
 ![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/giacomoferretti/mcdapi-telegram-bot.svg?color=blue&label=Stable)
 ![GitHub tag (latest SemVer pre-release)](https://img.shields.io/github/tag-pre/giacomoferretti/mcdapi-telegram-bot.svg?label=Testing)
 [![GitHub license](https://img.shields.io/github/license/giacomoferretti/mcdapi-telegram-bot.svg?color=informational)](https://github.com/giacomoferretti/mcdapi-telegram-bot/blob/master/LICENSE)
+[![Donate](https://img.shields.io/badge/Donate-Paypal-blue.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=VN66MND8DYCGE&source=url)
 
 ![Header](.github/header.png)
 
@@ -53,6 +54,9 @@ docker run -d --name=mcdapibot --link=torproxy -v $(pwd)/images:/app/images -v $
 pip3 install -r requirements.txt
 python3 main.py
 ```
+
+## Donate
+If this repository helped you in any way, feel free to donate [here](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=VN66MND8DYCGE&source=url).
 
 ## Disclaimer
 This repository is against McDonald's ToS.
