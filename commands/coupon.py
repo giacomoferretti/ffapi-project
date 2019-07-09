@@ -257,20 +257,23 @@ class CouponHandler(base.Command):
 
             offer = self.__config__.__offers__[str(id_)]
 
-            if os.path.isfile(os.path.join(__image_folder__, offer['promoImagePath'])):
-                with open(os.path.join(__image_folder__, offer['promoImagePath']), 'rb') as f:
-                    image = f.read()
-            else:
-                params = endpoints.PROMO_IMAGE['params']
-                params['path'] = offer['promoImagePath']
-                params['imageFormat'] = 'png'
-                r = session.request(endpoints.PROMO_IMAGE['method'], endpoints.PROMO_IMAGE['url'].format(size=1080),
-                                    params=params)
+            if offer['promoImagePath'] != None:
+                if os.path.isfile(os.path.join(__image_folder__, offer['promoImagePath'])):
+                    with open(os.path.join(__image_folder__, offer['promoImagePath']), 'rb') as f:
+                        image = f.read()
+                else:
+                    params = endpoints.PROMO_IMAGE['params']
+                    params['path'] = offer['promoImagePath']
+                    params['imageFormat'] = 'png'
+                    r = session.request(endpoints.PROMO_IMAGE['method'], endpoints.PROMO_IMAGE['url'].format(size=1080),
+                                        params=params)
 
-                if r.status_code == 200:
-                    with open(os.path.join(__image_folder__, offer['promoImagePath']), 'wb') as f:
-                        f.write(r.content)
-                        image = r.content
+                    if r.status_code == 200:
+                        with open(os.path.join(__image_folder__, offer['promoImagePath']), 'wb') as f:
+                            f.write(r.content)
+                            image = r.content
+            else:
+                image = None
 
             # Create inline keyboard
             keyboard = [
@@ -294,8 +297,12 @@ class CouponHandler(base.Command):
                 .format(title=offer['title'], description=offer['description'], id=id_, start_date=offer['startDate'],
                         end_date=offer['endDate'], extra=extra_content)
 
-            context.bot.send_photo(chat_id=query.message.chat.id, photo=BytesIO(image), caption=body,
-                                   parse_mode=ParseMode.HTML, reply_markup=reply_markup)
+            if image != None:
+                context.bot.send_photo(chat_id=query.message.chat.id, photo=BytesIO(image), caption=body,
+                                       parse_mode=ParseMode.HTML, reply_markup=reply_markup)
+            else:
+                context.bot.send_message(chat_id=query.message.chat.id, text=body,
+                                       parse_mode=ParseMode.HTML, reply_markup=reply_markup)
 
         elif query.data.startswith('{}_id'.format(self.name)):
             # Edit message
