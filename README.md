@@ -59,6 +59,4 @@ python3 main.py
 If this repository helped you in any way, feel free to donate [here](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=VN66MND8DYCGE&source=url).
 
 ## Disclaimer
-This repository is against McDonald's ToS.
-
-This repository is not affiliated with McDonald's Corp in any way. "McDonald's" and "McDonald's Logo" are registered trademarks of McDonald's Corp.
+This repository is not affiliated with McDonald's Corp in any way. "McDonald's" is a registered trademark of McDonald's Corp.
