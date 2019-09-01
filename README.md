@@ -27,8 +27,6 @@ proxyEnabled: Enables and disables generating coupons through a proxy
 proxyUrl: URL of the proxy, if enabled
 ```
 
-You can download `offers.json` already scraped and parsed with `mcdapi-tools` [here](https://gist.github.com/giacomoferretti/a24797299041692613c155cac79b8127).
-
 ## Running the bot
 You can run the bot using one of these three methods
 
